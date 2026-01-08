@@ -4,7 +4,7 @@ import { Search, Users, Megaphone, Bell, ArrowLeft, Heart, ShoppingBag } from "l
 import { RiToothLine } from "react-icons/ri";
 import { MdGridView } from "react-icons/md";
 import { useCart } from "../CartContext";
-import axios from "axios"; // axios import qilish
+import axios from "axios";
 
 // Rasmlarni import qilish
 import Chair from "../assets/chair.png";
@@ -29,6 +29,7 @@ function Boshsaxifa() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cartLoading, setCartLoading] = useState({}); // Har bir mahsulot uchun loading holati
   
   const navigate = useNavigate();
 
@@ -42,7 +43,7 @@ function Boshsaxifa() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('accessToken'); // Agar auth kerak bo'lsa
+        const token = localStorage.getItem('accessToken');
 
         const response = await axios.get(`${BASE_URL}/api/product`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -63,7 +64,7 @@ function Boshsaxifa() {
           price: product.price ? `${product.price.toLocaleString()} sum` : "Narx belgilanmagan",
           img: product.imageUrl && product.imageUrl.length > 0
             ? `${BASE_URL}/images/${product.imageUrl[0]}`
-            : "https://via.placeholder.com/300x300?text=No+Image" // fallback rasm
+            : "https://via.placeholder.com/300x300?text=No+Image"
         }));
 
         setProducts(formattedProducts);
@@ -71,7 +72,7 @@ function Boshsaxifa() {
       } catch (err) {
         console.error("Mahsulotlarni yuklashda xato:", err);
         setError("Mahsulotlarni yuklab bo'lmadi. Internetni tekshiring.");
-        setProducts([]); // xato bo'lsa bo'sh qoldiramiz
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -79,6 +80,75 @@ function Boshsaxifa() {
 
     fetchProducts();
   }, []);
+
+  // Mahsulotni savatga qo'shish funksiyasi
+  const handleAddToCartAPI = async (product) => {
+    try {
+      // Loading holatini o'rnatish
+      setCartLoading(prev => ({ ...prev, [product.id]: true }));
+      
+      const token = localStorage.getItem('accessToken');
+      
+      if (!token) {
+        alert("Iltimos, avval tizimga kiring!");
+        navigate('/login');
+        return;
+      }
+
+      // API ga yuboriladigan ma'lumot
+      const cartData = {
+        product_id: product._id || product.id,
+        quantity: 1,
+        price: product.price ? parseFloat(product.price) : 0
+      };
+
+      console.log("Yuborilayotgan ma'lumot:", cartData);
+
+      const response = await axios.post(
+        `${BASE_URL}/api/cart/add`,
+        cartData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("API javobi:", response.data);
+
+      if (response.data.success) {
+        // Contextga ham qo'shamiz (agar kerak bo'lsa)
+        const productData = {
+          id: product.id,
+          nomi: product.name,
+          narxi: product.price ? parseInt(product.price.toString().replace(/\s/g, '').replace('sum', '')) : 0,
+          image: product.img,
+          quantity: 1
+        };
+        
+        addToCart(productData);
+        
+      } else {
+        alert("Mahsulot qo'shishda xato: " + (response.data.message || "Noma'lum xato"));
+      }
+    } catch (error) {
+      console.error("Savatga qo'shishda xato:", error);
+      
+      // Xato xabarini chiqarish
+      if (error.response) {
+        console.error("Xato ma'lumoti:", error.response.data);
+        alert(`Xato: ${error.response.data.message || error.response.statusText}`);
+      } else if (error.request) {
+        alert("Serverga ulanib bo'lmadi. Internet aloqasini tekshiring.");
+      } else {
+        alert("Xato: " + error.message);
+      }
+    } finally {
+      // Loading holatini olib tashlash
+      setCartLoading(prev => ({ ...prev, [product.id]: false }));
+    }
+  };
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
@@ -167,11 +237,17 @@ function Boshsaxifa() {
           </div>
         )}
 
-        {/* Main Grid - Faqat loading va error bo'lmasa ko'rsatamiz */}
+        {/* Main Grid */}
         {!loading && !error && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 md:px-8 mt-6 pb-10">
             {products.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} navigate={navigate} addToCart={addToCart} />
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                navigate={navigate} 
+                onAddToCart={handleAddToCartAPI}
+                isLoading={cartLoading[product.id] || false}
+              />
             ))}
           </div>
         )}
@@ -189,7 +265,13 @@ function Boshsaxifa() {
           <div className="max-w-7xl mx-auto p-4 md:p-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} navigate={navigate} addToCart={addToCart} />
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  navigate={navigate} 
+                  onAddToCart={handleAddToCartAPI}
+                  isLoading={cartLoading[product.id] || false}
+                />
               ))}
             </div>
           </div>
@@ -199,19 +281,10 @@ function Boshsaxifa() {
   );
 }
 
-function ProductCard({ product, navigate, addToCart }) {
-  const handleAddToCart = (e) => {
+function ProductCard({ product, navigate, onAddToCart, isLoading }) {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
-
-    const productData = {
-      id: product.id,
-      nomi: product.name,
-      narxi: product.price ? parseInt(product.price.replace(/\s/g, '').replace('sum', '')) : 0,
-      image: product.img,
-      quantity: 1
-    };
-
-    addToCart(productData);
+    await onAddToCart(product);
   };
 
   return (
@@ -242,9 +315,19 @@ function ProductCard({ product, navigate, addToCart }) {
         </p>
         <button
           onClick={handleAddToCart}
-          className="w-full bg-[#00C2FF] text-white py-3 rounded-[15px] flex items-center justify-center gap-2 font-bold active:scale-95 transition-all"
+          disabled={isLoading}
+          className={`w-full ${isLoading ? 'bg-gray-400' : 'bg-[#00C2FF]'} text-white py-3 rounded-[15px] flex items-center justify-center gap-2 font-bold active:scale-95 transition-all disabled:opacity-70`}
         >
-          <ShoppingBag size={18} /> Savatga
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Qo'shilmoqda...
+            </>
+          ) : (
+            <>
+              <ShoppingBag size={18} /> Savatga
+            </>
+          )}
         </button>
       </div>
     </div>

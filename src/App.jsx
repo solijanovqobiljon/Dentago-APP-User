@@ -33,6 +33,7 @@ import Tarjima from './pages/lenguage.jsx'
 import Kurs from './components/kurs.jsx'
 function App() {
   return (
+    // 2. Hammasini CartProvider bilan o'rab chiqing
     <CartProvider>
       <div className="bg-white min-h-screen">
         <div className="px-1 lg:px-10 pb-24 pt-4">
