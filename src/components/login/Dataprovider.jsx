@@ -1,39 +1,46 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-// Context yaratamiz
 const DataContext = createContext();
 
-// Hook yaratamiz (useData orqali ishlatish uchun)
-export const useData = () => useContext(DataContext);
+export const useData = () => {
+    const context = useContext(DataContext);
+    if (!context) {
+        throw new Error('useData must be used within a DataProvider');
+    }
+    return context;
+};
 
 export const DataProvider = ({ children }) => {
-    // 1. Holatlar (States)
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [authLoaded, setAuthLoaded] = useState(false);
-    const [user, setUser] = useState(null); // Tizimga kirgan foydalanuvchi ma'lumotlari
+    const [user, setUser] = useState(null);
 
-    // 2. Sahifa yuklanganda foydalanuvchini tekshirish
     useEffect(() => {
-        const accessToken = localStorage.getItem('accessToken');
-        const savedUser = localStorage.getItem('userData');
+        const checkAuth = () => {
+            const accessToken = localStorage.getItem('accessToken');
+            const savedUser = localStorage.getItem('userData');
 
-        if (accessToken && savedUser) {
+            if (!accessToken || !savedUser) {
+                setAuthLoaded(true);
+                return;
+            }
+
             try {
                 const userObj = JSON.parse(savedUser);
                 setUser(userObj);
                 setIsAuthenticated(true);
             } catch (e) {
-                console.error("Foydalanuvchi ma'lumotlarini o'qishda xato:", e);
-                // Agar xato bo'lsa, hammasini tozalaymiz
+                console.error("Auth tekshirishda xato:", e);
                 logout();
+            } finally {
+                setAuthLoaded(true);
             }
-        }
-        setAuthLoaded(true);
+        };
+
+        checkAuth();
     }, []);
 
-    // 3. Login/Register funksiyasi
-    // Bu funksiya telefon va foydalanuvchi obyektini qabul qilib, saqlab qo'yadi
-    const loginWithPhone = (phone, userObj = null) => {
+    const loginWithPhone = (phone, userObj = null, accessToken = null, refreshToken = null) => {
         setIsAuthenticated(true);
         localStorage.setItem('userPhone', phone);
 
@@ -41,21 +48,17 @@ export const DataProvider = ({ children }) => {
             setUser(userObj);
             localStorage.setItem('userData', JSON.stringify(userObj));
         }
+
+        if (accessToken) localStorage.setItem('accessToken', accessToken);
+        if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
     };
 
-    // 4. Logout funksiyasi
     const logout = () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userPhone');
-        localStorage.removeItem('userData');
-
+        localStorage.clear();
         setIsAuthenticated(false);
         setUser(null);
     };
 
-    // 5. Yuklash jarayoni (Loading)
-    // Auth tekshirilmaguncha dasturni ko'rsatmay turamiz
     if (!authLoaded) {
         return (
             <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -65,13 +68,12 @@ export const DataProvider = ({ children }) => {
         );
     }
 
-    // 6. Provider orqali ma'lumotlarni tarqatamiz
     return (
         <DataContext.Provider value={{
-            user,               // Foydalanuvchi obyekti (ism, familiya va h.k.)
-            isAuthenticated,    // Tizimga kirganmi yoki yo'q
-            loginWithPhone,     // Kirish funksiyasi
-            logout              // Chiqish funksiyasi
+            user,
+            isAuthenticated,
+            loginWithPhone,
+            logout
         }}>
             {children}
         </DataContext.Provider>
