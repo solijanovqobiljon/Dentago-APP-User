@@ -45,7 +45,7 @@ const ProductDetail = () => {
           price: productData.price ? `${productData.price.toLocaleString()} sum` : "Narx belgilanmagan",
           img: productData.imageUrl && productData.imageUrl.length > 0
             ? `${BASE_URL}/images/${productData.imageUrl[0]}`
-            : "https://via.placeholder.com/400?text=No+Image",
+            : "",
           artikul: productData.artikul || productData.sku || "Belgilanmagan"
         };
 
@@ -120,7 +120,7 @@ const ProductDetail = () => {
           src={product.img}
           alt={product.name}
           className="max-h-full max-w-full object-contain rounded-2xl"
-          onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Rasm+yuklanmadi"; }}
+          onError={(e) => { e.target.src = ""; }}
         />
       </div>
 

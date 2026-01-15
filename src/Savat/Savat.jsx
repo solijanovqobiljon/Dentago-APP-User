@@ -139,7 +139,7 @@ const Savat = () => {
           quantity: item.quantity || 1,
           image: item.productSnapshot?.imageUrl && item.productSnapshot.imageUrl.length > 0
             ? `${BASE_URL}/images/${item.productSnapshot.imageUrl[0]}`
-            : "https://via.placeholder.com/300?text=Rasm+yuklanmadi",
+            : "",
           category: item.productSnapshot?.category || "",
           company: item.productSnapshot?.company || ""
         }));

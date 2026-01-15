@@ -66,7 +66,7 @@ function Boshsaxifa() {
           price: product.price ? `${Number(product.price).toLocaleString('uz-UZ')} so'm` : "Narx yo'q",
           img: product.imageUrl && product.imageUrl.length > 0
             ? `${BASE_URL}images/${product.imageUrl[0]}`
-            : "https://via.placeholder.com/300x300?text=No+Image"
+            : ""
         }));
         setProducts(formattedProducts);
         console.log("✅ Products yuklandi:", formattedProducts.length);
@@ -86,7 +86,7 @@ function Boshsaxifa() {
             id: 'demo1',
             name: 'Dental Chair Pro',
             price: '15 000 000 so\'m',
-            img: 'https://via.placeholder.com/300x300/00C2FF/FFFFFF?text=Dental+Chair'
+            img: ''
           }
         ]);
       } finally {
@@ -300,7 +300,7 @@ function ProductCard({ product, navigate, onAddToCart, isLoading }) {
           alt={product.name}
           className="object-contain h-full w-full p-4 group-hover:scale-110 transition-all duration-300"
           onError={(e) => {
-            e.target.src = "https://via.placeholder.com/300x300/00C2FF/FFFFFF?text=Rasm+yoq";
+            e.target.src = "";
           }}
         />
       </div>

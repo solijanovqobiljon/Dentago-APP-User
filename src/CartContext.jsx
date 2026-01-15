@@ -55,7 +55,7 @@ export const CartProvider = ({ children }) => {
           ...product,
           narxi: cleanPrice,
           quantity: 1,
-          image: product.image || product.rasm || '/placeholder-image.jpg' // Tasvirni saqlash
+          image: product.image || product.rasm || '/' // Tasvirni saqlash
         }];
       }
 
