@@ -75,7 +75,7 @@ const Haqida = () => {
       {/* Footer */}
       <div className="mt-auto mb-8 pt-10">
         <p className="text-gray-400 text-sm">
-          © 2025 DentaGo. Все права защищены.
+          © 2026 DentaGo. Все права защищены.
         </p>
       </div>
     </div>
