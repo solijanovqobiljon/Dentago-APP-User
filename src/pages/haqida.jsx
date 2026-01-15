@@ -55,18 +55,18 @@ const Haqida = () => {
           <h3 className="text-xl font-bold mb-5 text-gray-900">Связаться с нами</h3>
           
           <div className="space-y-5">
-            <a href="https://example.com" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-blue-500 font-medium text-lg hover:opacity-80">
+            <a href="https://t.me/Denta_go_bazar" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-blue-500 font-medium text-lg hover:opacity-80">
               <div className="bg-blue-100 p-1.5 rounded-md">
                 <Globe size={22} />
               </div>
-              Перейти на веб-сайт
+              Telegram kanalimiz
             </a>
             
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-blue-500 font-medium text-lg hover:opacity-80">
+            <a href="https://www.instagram.com/dentago__uz?igsh=MTIyM3c5NXY2d2w4bA==" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-blue-500 font-medium text-lg hover:opacity-80">
               <div className="bg-blue-100 p-1.5 rounded-md">
                 <Instagram size={22} />
               </div>
-              Мы в Instagram
+              instagram kanalimiz
             </a>
           </div>
         </div>
