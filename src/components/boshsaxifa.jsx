@@ -102,7 +102,6 @@ function Boshsaxifa() {
      
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert("🚫 Iltimos, avval login qiling!");
         navigate('/login');
         return;
       }

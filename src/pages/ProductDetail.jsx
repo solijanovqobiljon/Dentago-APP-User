@@ -10,7 +10,6 @@ const ProductDetail = () => {
   const { id } = useParams(); // URL dan mahsulot ID si
   const navigate = useNavigate();
   const { addToCart } = useCart();
-
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,16 +19,20 @@ const ProductDetail = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('accessToken');
-
-        const response = await axios.get(`${BASE_URL}/api/product/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
-        });
-
+        
         let productData = null;
-        if (response.data && response.data.data) {
-          productData = response.data.data;
-        } else if (response.data) {
-          productData = response.data;
+
+        if (token) {
+          // Token bo'lsa, original API dan foydalanamiz
+          const response = await axios.get(`${BASE_URL}/api/product/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          productData = response.data.data || response.data;
+        } else {
+          // Token bo'lmasa, barcha mahsulotlarni yuklab, filtrlaymiz
+          const response = await axios.get(`${BASE_URL}/api/product/app/product/all?limit=200`);
+          const allProducts = response.data.data || [];
+          productData = allProducts.find(p => p._id === id);
         }
 
         if (!productData) {
@@ -43,9 +46,7 @@ const ProductDetail = () => {
           id: productData._id || productData.id,
           name: productData.name || "Nomsiz mahsulot",
           price: productData.price ? `${productData.price.toLocaleString()} sum` : "Narx belgilanmagan",
-          img: productData.imageUrl && productData.imageUrl.length > 0
-            ? `${BASE_URL}/images/${productData.imageUrl[0]}`
-            : "",
+          img: productData.imageUrl && productData.imageUrl.length > 0 ? `${BASE_URL}/images/${productData.imageUrl[0]}` : "",
           artikul: productData.artikul || productData.sku || "Belgilanmagan"
         };
 
@@ -66,7 +67,6 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-
     const productData = {
       id: product.id,
       nomi: product.name,
@@ -74,7 +74,6 @@ const ProductDetail = () => {
       image: product.img,
       quantity: 1
     };
-
     addToCart(productData);
   };
 
@@ -158,8 +157,7 @@ const ProductDetail = () => {
           onClick={handleAddToCart}
           className="w-full bg-[#00C2FF] text-white py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-all"
         >
-          <ShoppingBag size={20} />
-          Savatga qo'shish
+          <ShoppingBag size={20} /> Savatga qo'shish
         </button>
       </div>
     </div>
